@@ -8,9 +8,9 @@ namespace EasterEgg
 {
     public static class Game
     {
-        public static bool ValidateOption(int option)
+        public static bool ValidateOption(int option, int min, int max)
         {
-            return option == 1 || option == 2;
+            return option < min || option > max;
         }
         public static bool ExitGame(int option)
         {
