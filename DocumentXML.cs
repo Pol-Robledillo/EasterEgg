@@ -1,27 +1,29 @@
 ﻿using System.Xml;
 using System.Xml.Linq;
-using EasterEgg;
 
 namespace EasterEgg
 {
     public class DocumentXML
     {
+        public const string FilePath = @"..\..\..\Personajes.xml";
         public static void ReadMainNode(string fileName)
         {
-            const string NotFound = "No se encontraron elementos 'Personaje' en el archivo XML.";
+            const string NotFound = "No 'Character' elements were found in the XML file";
             try
             {
                 XmlDocument doc = new XmlDocument();
                 doc.Load(fileName);
 
-                XmlNodeList personajesNodes = doc.SelectNodes("/personajes/Personaje");
-                if (personajesNodes != null)
+                XmlNodeList PersonajesNodes = doc.SelectNodes("/Personajes/Personaje");
+
+                if (PersonajesNodes != null)
                 {
-                    foreach (XmlNode personajeNode in personajesNodes)
+                    foreach (XmlNode personajeNode in PersonajesNodes)
                     {
                         ReadChilds(personajeNode);
                     }
                 }
+
                 else
                 {
                     Console.WriteLine(NotFound);
@@ -48,28 +50,25 @@ namespace EasterEgg
 
         public static void CreateXML(Character character)
         {
-            const string Done = "Se ha añadido un nuevo personaje al archivo XML.";
+            const string Done = "A new character has been added to the XML file.";
+            const string Error = "Error when creating the XML: {0}";
             try
             {
                 XDocument doc;
 
-                // Verificar si el archivo XML existe
-                if (File.Exists("Personajes.xml"))
+                if (File.Exists(FilePath)) // Verificar si el archivo XML existe
                 {
-                    // Si el archivo XML existe, cargarlo
-                    doc = XDocument.Load("Personajes.xml");
+                    doc = XDocument.Load(FilePath); // Si el archivo XML existe, cargarlo
 
-                    // Verificar si el documento tiene un elemento raíz
-                    if (doc.Root == null)
+                    if (doc.Root == null) // Verificar si el documento tiene un elemento raíz
                     {
-                        // Si no tiene un elemento raíz, crear uno
-                        doc.Add(new XElement("personajes"));
+                        doc.Add(new XElement("Personajes")); // Si no tiene un elemento raíz, crear uno
                     }
                 }
                 else
                 {
                     // Si el archivo XML no existe, crear un nuevo documento con un elemento raíz
-                    doc = new XDocument(new XDeclaration("1.0", "utf-8", "yes"), new XElement("personajes"));
+                    doc = new XDocument(new XDeclaration("1.0", "utf-8", "yes"), new XElement("Personajes"));
                 }
 
                 // Crear el nuevo elemento Personaje y agregarlo al documento
@@ -79,33 +78,38 @@ namespace EasterEgg
                     new XElement("Health", character.Health),
                     new XElement("Attack", character.Attack),
                     new XElement("Defense", character.Defense));
+
                 doc.Root.Add(nuevoPersonaje);
 
                 // Guardar el documento actualizado
-                doc.Save("Personajes.xml");
-
+                doc.Save(FilePath);
+                Console.WriteLine();
                 Console.WriteLine(Done);
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Error al crear el XML: " + ex.Message);
+                Console.WriteLine(Error, ex.Message);
             }
         }
+
         public static void ModifyTag(string name, string tag, int newValue)
         {
-            const string NotFound = "No se encontró el tag a modificar.";
-            const string Done = "Se ha modificado el tag correctamente.";
+            const string NotFound = "Tag not found.";
+            const string Done = "Tag updated successfully.";
+            const string Error = "Error when updating the tag: {0}";
+
             try
             {
-                XDocument doc = XDocument.Load("Personajes.xml");
-                XElement personaje = doc.Descendants("Personaje").FirstOrDefault(p => p.Element("Nombre").Value == name);
+                XDocument doc = XDocument.Load(FilePath);
+                XElement personaje = doc.Descendants("Personaje").FirstOrDefault(p => p.Element("Name").Value == name);
                 if (personaje != null)
                 {
                     XElement element = personaje.Element(tag);
                     if (element != null)
                     {
                         element.Value = Convert.ToString(newValue);
-                        doc.Save("Personajes.xml");
+                        doc.Save(FilePath);
+                        Console.WriteLine();
                         Console.WriteLine(Done);
                     }
                     else
@@ -120,16 +124,20 @@ namespace EasterEgg
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Error al modificar el tag: " + ex.Message);
+                Console.WriteLine(Error, ex.Message);
             }
         }
-        public static Character GetXMLCharacter(string name)
+
+        public static Character? GetXMLCharacter(string name)
         {
-            const string NotFound = "No se encontró el personaje.";
+            const string Error = "Error when searching for the character: {0}";
+            const string NotFound = "Character not found.";
+
             try
             {
-                XDocument doc = XDocument.Load("Personajes.xml");
-                XElement personaje = doc.Descendants("Personaje").FirstOrDefault(p => p.Element("Nombre").Value == name);
+                XDocument doc = XDocument.Load(FilePath);
+                XElement personaje = doc.Descendants("Personaje").FirstOrDefault(p => p.Element("Name").Value == name);
+
                 if (personaje != null)
                 {
                     string nombre = personaje.Element("Name").Value;
@@ -142,13 +150,40 @@ namespace EasterEgg
                 else
                 {
                     Console.WriteLine(NotFound);
-                    return null;
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Error al obtener el personaje: " + ex.Message);
-                return null;
+                Console.WriteLine(Error, ex.Message);
+            }
+
+            return null;
+        }
+
+        public static void LevelUp(string name)
+        {
+            const string Error = "Error when searching for the character: {0}";
+            const string NotFound = "Character not found.";
+
+            try
+            {
+                XDocument doc = XDocument.Load(FilePath);
+                XElement personaje = doc.Descendants("Personaje").FirstOrDefault(p => p.Element("Name").Value == name);
+
+                if (personaje != null)
+                {
+                    personaje.Element("Level").Value += 1;
+                    doc.Save(FilePath);
+                }
+                else
+                {
+                    Console.WriteLine(NotFound);
+                }
+            }
+
+            catch (Exception ex)
+            {
+                Console.WriteLine(Error, ex.Message);
             }
         }
     }
